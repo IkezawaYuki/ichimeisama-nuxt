@@ -57,7 +57,7 @@
           <v-btn
             color="primary"
             nuxt
-            to="/inspire"
+            to="/gmap"
           >
             Continue
           </v-btn>
