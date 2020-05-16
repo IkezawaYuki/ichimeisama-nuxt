@@ -39,6 +39,7 @@ export default {
   ** Plugins to load before mounting the App
   */
   plugins: [
+    {src:"~plugins/vue2-google-maps.js", ssr: true} 
   ],
   /*
   ** Nuxt.js dev-modules
@@ -98,10 +99,12 @@ export default {
   ** Build configuration
   */
   build: {
+    
     /*
     ** You can extend webpack config here
     */
     extend (config, ctx) {
-    }
+    },
+    transpile: [/^vue2-google-maps($|\/)/]
   }
 }

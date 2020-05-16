@@ -1,22 +1,40 @@
 <template>
-  <div class="map">
-    <h2>Map</h2>
-  </div>
+<v-layout row justify-center align-center>
+
+<GmapMap
+  :center="{lat:10, lng:10}"
+  :zoom="7"
+  map-type-id="terrain"
+  style="width: 500px; height: 300px"
+>
+  <GmapMarker
+    :key="index"
+    v-for="(m, index) in markers"
+    :position="m.position"
+    :clickable="true"
+    :draggable="true"
+    @click="center=m.position"
+  />
+</GmapMap>
+
+</v-layout>
 </template>
 
 <script>
-
 export default {
-  components: {
+  data() {
+    return {
+      markers: [
+        {position: { lng: 10.2, lat: 10 }},
+        {position: { lng: 10.1, lat: 10 }}
+      ]
+    };
   },
-  data(){
-    return{
-
-    }
-  }
-}
+  mounted(){
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start()
+      setTimeout(() => this.$nuxt.$loading.finish(), 500)
+    })
+  },
+};
 </script>
-
-<style lang="stylus" scoped>
-
-</style>

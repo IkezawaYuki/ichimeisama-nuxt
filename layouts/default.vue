@@ -30,8 +30,9 @@
       app
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <img src="@/assets/image/ichimeisama.png"/>
-      <!-- <v-toolbar-title v-text="title" /> -->
+      <!-- todo ベストな方法の調査 -->
+      <img src="@/assets/image/ichimeisama.png" height="40px"/>
+
       <v-spacer />
 
     </v-app-bar>
