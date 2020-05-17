@@ -1,16 +1,20 @@
 <template>
   
   <v-layout wrap>
-  <v-btn @click="onClickCurrent" >getCurrentPosition</v-btn>
-   <GmapMap class="map-panel" map-type-id="terrain" 
+   <GmapMap class="map-panel" map-type-id="roadmap" 
         style="width: 100%; height: 100%"
         :draggable="true"
         :center="maplocation"
         :zoom="15"
-        ref="mmm">
-        <GmapMarker 
-        :position = "maplocation" 
-        />
+        ref="mapRef">
+        <GmapMarker v-for="m in makers"
+        :position="m.position"
+        :title="m.title"
+        :clickable="true"
+        :draggable="false"
+        :icon="m.icon"
+        :key="m.id">
+      </GmapMarker>
     </GmapMap>
   </v-layout>
 </template>
@@ -19,7 +23,7 @@
 export default {
   data() {
     return {
-      currentLoc:{},
+      makers:[],
       maplocation:{lng: 0, lat: 0}
     }
   },
@@ -28,44 +32,66 @@ export default {
       this.$nuxt.$loading.start()
       setTimeout(() => this.$nuxt.$loading.finish(), 500)
     })
-    // onClickCurrent()
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position){
+          let coords = position.coords;
+          // 緯度経度を取得
+          this.maplocation.lat = coords.latitude;
+          this.maplocation.lng = coords.longitude;
+          // 地図読み込み完了時のイベント
+          // this.$gmapApiPromiseLazy().then(() => {
+          //   google.maps.event.addListenerOnce(this.$refs.mapRef.$mapObject, 'idle',
+          //     function() { this.setPlaceMakers() }.bind(this)
+          //   );
+          // });
+        }.bind(this),
+        function(error) {
+          // エラーの場合は東京駅周辺に移動
+          this.maplocation.lat = 35.6813092;
+          this.maplocation.lng = 139.7677269;
+        }
+      );
+    } else {
+      // 現在地取得不可の場合は東京駅周辺に移動
+      this.maplocation.lat = 35.6813092;
+      this.maplocation.lng = 139.7677269;
+    }
   },
   methods:{
-    async onClickCurrent(){
-      console.log('--onClickCurrent')
-      try{
-          let data =await getPosition();
-          console.log('--success',data)
-          console.log('typeof', typeof(data))
-
-          let data2={};
-          data2.lat = data.coords.latitude ;
-          data2.lng = data.coords.longitude ;
-          data2.alt = data.coords.altitude ;
-          data2.accLatlng = data.coords.accuracy ;
-          data2.accAlt = data.coords.altitudeAccuracy ;
-          data2.heading = data.coords.heading ;           //0=北,90=東,180=南,270=西
-          data2.speed = data.coords.speed ;
-
-          // Object.assign(data2,data.coords); // not work
-          // this.$set(this.currentLoc,"data2",data.coords);//not work
-          console.log('data2',data2)
-          this.$set(this.currentLoc,"coords",data2);
-
-          //set Googlemap
-          this.maplocation.lat = data2.lat;
-          this.maplocation.lng = data2.lng;
-          this.$refs.mmm.panTo(this.maplocation );
-
-      }catch(e){
-          console.log('--error',e);
-      }
+    setPlaceMakers() {
+      let map = this.$refs.mapRef.$mapObject
+      let placeService = new google.maps.places.PlacesService(map);
+      // Places APIのnearbySearchを使用する。
+      placeService.nearbySearch(
+        {
+          location: new google.maps.LatLng(this.maplocation.lat, this.maplocation.lng),
+          radius: 500,
+          type: ['restaurant']
+        },
+        function(results, status) {
+          if (status == google.maps.places.PlacesServiceStatus.OK) {
+            results.forEach(place => {
+              // デフォルトのアイコンが大きめなので縮小
+              let icon = {
+                url: place.icon, // url
+                scaledSize: new google.maps.Size(30, 30), // scaled size
+                origin: new google.maps.Point(0, 0), // origin
+                anchor: new google.maps.Point(0, 0) // anchor
+              };
+              let maker = {
+                position: place.geometry.location,
+                icon: icon,
+                title: place.name,
+                id: place.place_id
+              };
+              this.makers.push(maker);
+            });
+          }
+        }.bind(this)
+      );
     }
   }
 };
-var getPosition = function (options) {
-  return new Promise(function (resolve, reject) {
-    navigator.geolocation.getCurrentPosition(resolve, reject, options);
-  });
-}
+
 </script>
